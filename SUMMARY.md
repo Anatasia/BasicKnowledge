@@ -6,4 +6,5 @@
   * [基本概念](shu-ju-ku/ji-ben-gai-nian.md)
   * [SQL语句](shu-ju-ku/sqlyu-ju.md)
   * [数据库保护](shu-ju-ku/shu-ju-ku-bao-hu.md)
+* [Java基础](javaji-chu.md)
 
