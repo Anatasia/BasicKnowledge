@@ -1,16 +1,14 @@
-小结：
+总结：
 
-1）事件传递的顺序是先外层容器，之后再是具体的View。
+1）事件接收先从父控件到子控件，如果父控件onInterceptTouchEvent为true，则表示拦截事件。
 
-2）OnTouch事件先于OnTouchEvent事件，OnTouchEvent先于OnClick事件。
+2）dispatchTouchEvent的ACTION\_DOWN事件中，会清除上一次的点击目标列表，且重置disallowIntercept状态为false，表示拦截，但是真正的拦截状态还是靠onInterceptTouchEvent函数的返回值决定。
 
-3）onTouch事件的返回值为true会拦截onTouchEvent事件。
+3）如果为复杂的自定义控件，有滑动事件处理，还需要重写onInterceptTouchEvent。
 
-4）onTouchEvent与onClick有关联。
+4）如果onLongClick执行，api 23 默认时间为500毫秒，则onClick不执行。
 
-5）父控件onInterceptTouchEvent返回true会拦截子控件的事件。
-
-6）如果enable为false，因为短路onTouch不会执行。
+5）如果onTouch事件返回为true，则会拦截onTouchEvent事件，onClick，onLongClick事件均不在执行。
 
 ## 1.分析：
 
@@ -46,7 +44,5 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
 
 3）调用了Activity的onTouchEvent事件。
 
- PhoneWindow的superDispatchTouchEvent又调用了DecorView的superDispatchTouchEvent函数，每一个Activity都有一个PhoneWindow，每一个PhoneWindow都有一个DecorView，DecoView继承自FrameLayout，这里又调用了super.dispatchTouchEvent\(event\)，FrameLayout里面是没有改函数的，所以最终执行的是ViewGroup的dispatchTouchEvent函数。
-
-
+PhoneWindow的superDispatchTouchEvent又调用了DecorView的superDispatchTouchEvent函数，每一个Activity都有一个PhoneWindow，每一个PhoneWindow都有一个DecorView，DecoView继承自FrameLayout，这里又调用了super.dispatchTouchEvent\(event\)，FrameLayout里面是没有改函数的，所以最终执行的是ViewGroup的dispatchTouchEvent函数。
 
