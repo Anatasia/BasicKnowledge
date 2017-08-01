@@ -15,4 +15,5 @@
   * 排序
 * [Android](android.md)
   * [AsyncTask](android/asynctask.md)
+  * [Android事件分发机制](android/androidshi-jian-fen-fa-ji-zhi.md)
 

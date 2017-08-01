@@ -267,5 +267,60 @@ private static class SerialExecutor implements Executor {
 
 ## 常见问题
 
-1）能否在其他线程中调用AsncTask？如果可以调用，它能否更新界面？如果能，为什么在新开的线程中可以更新界面。
+1）能否在其他线程中调用AsncTask？如果可以调用，它能否更新界面？如果能，为什么在新开的线程中可以更新界面？
+
+A1：可以在其他线程中调用AsncTask。
+
+A2：它能更新UI界面，下面我们详细说说为什么能更新UI界面，正常情况下，一个线程都对应了一个Hander，每个Hander对应一个Looper，我们上面新开了一个线程，如要使用Handler，就要调用Looper.prepare\(\)函数,因为UI线程在ActivityThread起来的时候已经调用了prepare函数,所以在程序中我们不需要再次调用,但是AsyncTask函数中并没有任何地方调用Looper.prepare\(\),同时它还能更新界面就说明了这个Looper就是使用的MainLooper。我们看到AsyncTask中有一个init函数
+
+```
+public static void init() {
+        sHandler.getLooper();
+    }
+```
+
+这个Looper就是MainLooper，但是init这个函数是在什么地方调用的呐？如果是MainLooper那应该就是在UI线程中调用的，那又在UI线程的什么地方进行调用的？
+
+```
+public static void main(String[] args) {
+       SamplingProfilerIntegration.start();
+
+       // CloseGuard defaults to true and can be quite spammy.  We
+        // disable it here, but selectively enable it later (via
+        // StrictMode) on debug builds, but using DropBox, not logs.
+        CloseGuard.setEnabled(false);
+
+        Environment.initForCurrentUser();
+
+        // Set the reporter for event logging in libcore
+        EventLogger.setReporter(new EventLoggingReporter());
+
+        Security.addProvider(new AndroidKeyStoreProvider());
+
+        Process.setArgV0("<pre-initialized>");
+
+        Looper.prepareMainLooper();
+
+        ActivityThread thread = new ActivityThread();
+        thread.attach(false);
+
+        if (sMainThreadHandler == null) {
+            sMainThreadHandler = thread.getHandler();
+        }
+
+        AsyncTask.init();
+
+        if (false) {
+            Looper.myLooper().setMessageLogging(new
+                    LogPrinter(Log.DEBUG, "ActivityThread"));
+        }
+
+        Looper.loop();
+
+        throw new RuntimeException("Main thread loop unexpectedly exited");
+    }
+}
+```
+
+我们查看ActivityThread的main函数中调用了AsyncTask.init\(\)，由此可以知道确实是在UI线程中进行调用的，因此在其他线程中调用AsyncTask，最终是与UI线程进行通信的。因此也能对界面进行更改。
 
