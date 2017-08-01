@@ -286,6 +286,8 @@ ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新
 
 观察者模式又分为两种模式：push和pull。push是指suject在状态变化时将所有的状态信息都发给observer，pull则是suject通知observer更新时，observer获取自己感兴趣的状态。
 
+两种模式在实现上的区别：push模式下，observer的update方法接收的是状态信息，而pull模式下，update方法接收的是suject对象，这种情况下，suject须提供状态信息的get方法，让observer可以获取自己感兴趣的信息。
+
 ## 3）观察者模式优缺点
 
 ### a）优点
