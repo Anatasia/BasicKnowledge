@@ -1,4 +1,6 @@
-android在新版本中不允许UI线程访问网络；在android中UI线程中不能执行耗时太长的任务，否则会引发ANR。
+        android在新版本中不允许UI线程访问网络；在android中UI线程中不能执行耗时太长的任务，否则会引发ANR。
 
 不同线程间的通信，可以选择Handler或者AsyncTask。这里主要介绍AsyncTask异步任务。
+
+
 
