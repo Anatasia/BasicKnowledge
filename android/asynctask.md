@@ -225,11 +225,9 @@ public final AsyncTask<Params, Progress, Result> executeOnExecutor(Executor exec
 
         return this;
     }
-
-
 ```
 
-在这个地方我们看到了exec.execute（mFuture），这个mFuture就是构造函数中的FutureTask。而executeOnExecutor被  task.executeOnExecutor\(AsyncTask.THREAD\_POOL\_EXECUTOR,value\)与  task.execute（value）调用，而这就是页面上开始调用的地方。到此为止分析了返回结果整个的调用流程，而进度条流程要简单很多就不进行分析了。
+在这个地方我们看到了exec.execute（mFuture），这个mFuture就是构造函数中的FutureTask。而executeOnExecutor被  task.executeOnExecutor\(AsyncTask.THREAD\_POOL\_EXECUTOR,value\)与  task.execute（value）调用，而这就是页面上开始调用的地方。到此为止分析了返回结果整个的调用流程，而进度条流程要简单很多就不进行分析了。
 
 ### 不指定Excutor时，AsyncTask如何顺序执行
 
@@ -267,11 +265,7 @@ private static class SerialExecutor implements Executor {
 
 最后我们来整理一下调用流程，execute调用FutureTask中的run函数，在run函数中调用callable的call函数，在call函数中调用postResult函数，在此发送message到handler，在handler处理返回的结果。
 
-
-
 ## 常见问题
 
-1）能否在其他线程中调用AsncTask
-
-
+1）能否在其他线程中调用AsncTask？如果可以调用，它能否更新界面？如果能，为什么在新开的线程中可以更新界面。
 
