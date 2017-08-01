@@ -104,5 +104,115 @@ public class InnerClassSingleton {
 
 ### 3）破坏单例
 
+### a）Break Singleton with Clonable
 
+```
+public class ClonableSingleton implements Cloneable{
+
+    private static final ClonableSingleton INSTANCE = new ClonableSingleton();
+
+    private ClonableSingleton() {
+    }
+
+    public static ClonableSingleton getInstance() {
+        return INSTANCE;
+    }
+
+    public Object clone() throws CloneNotSupportedException{
+        return super.clone();
+    }
+}
+```
+
+Java中类通过实现Clonable接口并覆写clone方法就可以完成一个其对象的拷贝。而当Singleton类为Clonable时也自然无法避免可利用这种方式被重新创建一份实例。通过以下的测试代码即可检验通过clone我们可以有效破坏单例。
+
+```
+public static void checkClone() throws Exception {
+    ClonableSingleton a = ClonableSingleton.getInstance();
+    ClonableSingleton b = (ClonableSingleton) a.clone();
+
+    assertEquals(a, b);
+}
+```
+
+### b）Break Singleton with Serialization
+
+```
+public class SerializableSingleton implements Serializable{
+
+    private static final long serialVersionUID = 6789088557981297876L;
+
+    private static final SerializableSingleton INSTANCE = new SerializableSingleton();
+
+    private SerializableSingleton() {
+    }
+
+    public static SerializableSingleton getInstance() {
+        return INSTANCE;
+    }
+}
+```
+
+第二种破坏方式就是利用序列化与反序列化，当Singleton类实现了Serializable接口就代表它是可以被序列化的，该实例会被保存在文件中，需要时从该文件中读取并反序列化成 对象。可就是在反序列化这一过程中不知不觉留下了可趁之机，因为默认的反序列化过程是绕开构造函数直接使用字节生成一个新的对象。于是，Singleton在反序列化时被创造出第二个实例。通过如下代码可轻松实现这一行为，a与b最终并不相等。
+
+```
+public static void checkSerialization() throws Exception {
+    File file = new File("serializableSingleton.out");
+    ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
+    file));
+    SerializableSingleton a = SerializableSingleton.getInstance();
+    out.writeObject(a);
+    out.close();
+
+    ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+    SerializableSingleton b = (SerializableSingleton) in.readObject();
+    in.close();
+
+    assertEquals(a, b);
+}
+```
+
+### c）Break Singleton with Reflection
+
+```
+public static void checkReflection() throws Exception {
+    EagerSingleton a = EagerSingleton.getInstance();
+
+    Constructor<EagerSingleton> cons = EagerSingleton.class
+        .getDeclaredConstructor();
+    cons.setAccessible(true);
+    EagerSingleton b = (EagerSingleton) cons.newInstance();
+
+    assertEquals(a, b);
+}
+```
+
+　前两种破坏方式说到底都是通过避免与私有构造函数正面冲突的方式另辟蹊径来实现的，而这种方式就显得艺高人胆大，既然你是私有的不允许外界直接调用，那么我就利用反射机制强行逼你就范：公开其访问权限。如此一来，原本看似安全的堡垒顷刻间沦为炮灰，Singleton再次沦陷。
+
+### d）Break Singleton with Classloaders
+
+```
+public static void checkClassloader() throws Exception {
+    String className = "fernando.lee.singleton.EagerSingleton";
+    ClassLoader classLoader1 = new MyClassloader();
+    Class<?> clazz1 = classLoader1.loadClass(className);
+
+    ClassLoader classLoader2 = new MyClassloader();
+    Class<?> clazz2 = classLoader2.loadClass(className);
+
+    System.out.println("classLoader1 = " + clazz1.getClassLoader());
+    System.out.println("classLoader2 = " + clazz2.getClassLoader());
+
+    Method getInstance1 = clazz1.getDeclaredMethod("getInstance");
+    Method getInstance2 = clazz2.getDeclaredMethod("getInstance");
+    Object a = getInstance1.invoke(null);
+    Object b = getInstance2.invoke(null);
+
+    assertEquals(a, b);
+}
+```
+
+　Java中一个类并不是单纯依靠其全包类名来标识的，而是全包类名加上加载它的类加载器共同确定的。因此，只要是用不同的类加载器加载的Singleton类并不认为是相同的，因此单例会再次被破坏，通过自定义编写的MyClassLoader即可实现。
+
+　　由此看来，Singleton唯有妥善关闭了如上所述的诸多后门才能称得上真正的单例。有两种方式可供参考，第一种方式通过完善现有实现让克隆、序列化、反射和类加载器无从下手，第二种方式则采取枚举类型间接实现单例。
 
