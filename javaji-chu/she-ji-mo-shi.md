@@ -220,3 +220,32 @@ Java中一个类并不是单纯依靠其全包类名来标识的，而是全包�
 
 a）Safe Singleton
 
+```
+public class SafeSingleton implements Serializable, Cloneable {
+
+    private static final long serialVersionUID = -4147288492005226212L;
+
+    private static SafeSingleton INSTANCE = new SafeSingleton();
+
+    private SafeSingleton() {
+        if (INSTANCE != null) {
+            throw new IllegalStateException("Singleton instance Already created.");
+        }
+    }
+
+    public static SafeSingleton getInstance() {
+        return INSTANCE;
+    }
+
+    private Object readResolve() throws ObjectStreamException {
+        return INSTANCE;
+    }
+
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException("Singleton can't be cloned");
+    }
+}
+```
+
+
+
