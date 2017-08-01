@@ -82,3 +82,27 @@ public class LazySingletonWithDoubleCheck {
 
 作为Lazy Singleton的改良版，这种采用了double-check的实现方式避免了对getInstance方法总是加锁。注意到尚未实例化时，存在两次检查的流程，第一次检查如果发现该实例已经存在就可以直接返回，否则则加类锁并进行第二次检查，原因在于可能出现多个线程同时通过了第一次检查，此时必须通过锁机制实现真正实例化时的排他性，保证只有一个线程成功抢占到锁并执行。此举即保证了线程安全，又将性能折损明显降低了，不失为比较理想的做法。
 
+### d）Inner Class Singleton
+
+```
+public class InnerClassSingleton {
+
+    private static class SingletonHolder {
+        private static final InnerClassSingleton INSTANCE = new InnerClassSingleton();
+    }
+
+    private InnerClassSingleton() {
+    }
+
+    public static final InnerClassSingleton getInstance() {
+        return SingletonHolder.INSTANCE;
+}
+}
+```
+
+另外一种可以有效解决线程并发问题并延迟实例化的做法就是如上代码所示的利用静态内部类来实现。单例类的实例被包裹在内部类中，因此该单例类加载时并不会完成实例化，直到有线程调用getInstance方法，内部类才会被加载并实例化单例类。这种做法应该说是比较令人满意的。
+
+### 3）破坏单例
+
+
+
