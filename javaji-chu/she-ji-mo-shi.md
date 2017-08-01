@@ -260,5 +260,23 @@ public enum EnumSingleton{
 }
 ```
 
-　采用枚举的方式实现Singleton非常简易，而且可直接通过EnumSingleton.INSTANCE获取该实例。Java中所有定义为enum的类内部都继承了Enum类，而Enum具备的特性包括类加载是静态的来保证线程安全，而且其中的clone方法是final的且直接抛出CloneNotSupportedException异常因而不允许拷贝，同时与生俱来的序列化机制也是直接由JVM掌控的并不会创建出新的实例，此外Enum不能被显式实例化反射破坏也不起作用。当然它也不是没有缺点，比如由于已经隐式继承Enum所以无法再继承其他类了（Java的单继承模式限制）。
+采用枚举的方式实现Singleton非常简易，而且可直接通过EnumSingleton.INSTANCE获取该实例。Java中所有定义为enum的类内部都继承了Enum类，而Enum具备的特性包括类加载是静态的来保证线程安全，而且其中的clone方法是final的且直接抛出CloneNotSupportedException异常因而不允许拷贝，同时与生俱来的序列化机制也是直接由JVM掌控的并不会创建出新的实例，此外Enum不能被显式实例化反射破坏也不起作用。当然它也不是没有缺点，比如由于已经隐式继承Enum所以无法再继承其他类了（Java的单继承模式限制）。
+
+# 2.观察者模式
+
+观察者模式\(Observer Pattern\)：定义对象间的一种一对多依赖关系，使得每当一个对象状态发生改变时，其相关依赖对象皆得到通知并被自动更新。观察者模式又叫做发布-订阅（Publish/Subscribe）模式、模型-视图（Model/View）模式、源-监听器（Source/Listener）模式或从属者（Dependents）模式。
+
+观察者模式需要的两个主体对象：被观察主体（Subject）、观察者（Observer），直观的说，观察者模式就是 被观察对象发生改变时能够通知观察者状态的变化 所以，观察者（Observer）依赖于被观察主体（Subject）的通知，在得到通知后进行后续的处理。
+
+![](/assets/Observer.png)
+
+分析：
+
+Subject：目标。他把所有对观察者对戏的引用保存在一个聚集里，每一个主题都可以有多个观察者。
+
+Observer：观察者。为所有的具体观察者定义一个接口，在得到主题的通知时能够及时的更新自己。
+
+ConcreteSubject：具体主题。将有关状态存入具体观察者对象。在具体主题发生改变时，给所有的观察者发出通知。
+
+ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新接口，以便使本身的状态与主题状态相协调。
 
