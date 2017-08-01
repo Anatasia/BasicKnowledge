@@ -322,5 +322,198 @@ ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新
 
 6、使用观察者模式，可以从被观察者处推或者拉数据。
 
-4）观察者模式的应用
+## 4）观察者模式的应用
+
+![](/assets/observer2.png)
+
+### 主题接口
+
+```
+/**
+ * 主题（发布者、被观察者）
+  */
+public interface Subject {
+
+    /**
+      * 注册观察者
+      */
+    void registerObserver(Observer observer);
+
+    /**
+     * 移除观察者
+      */
+    void removeObserver(Observer observer);
+
+    /**
+      * 通知观察者
+      */
+    void notifyObservers(); 
+}
+
+作者：张磊BARON
+链接：http://www.jianshu.com/p/d55ee6e83d66
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+### **观察者接口**
+
+```
+/**
+  * 观察者
+  */
+public interface Observer {
+    void update();
+}
+```
+
+### 公告牌用于显示的公共接口
+
+```
+public interface DisplayElement {
+    void display();
+}
+```
+
+```
+public class WeatherData implements Subject {
+
+    private List<Observer> observers;
+
+    private float temperature;//温度
+    private float humidity;//湿度
+    private float pressure;//气压
+    private List<Float> forecastTemperatures;//未来几天的温度
+
+    public WeatherData() {
+        this.observers = new ArrayList<Observer>();
+    }
+
+    @Override
+    public void registerObserver(Observer observer) {
+        this.observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        this.observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update();
+        }
+    }
+
+    public void measurementsChanged() {
+        notifyObservers();
+    }
+
+    public void setMeasurements(float temperature, float humidity, 
+    float pressure, List<Float> forecastTemperatures) {
+        this.temperature = temperature;
+        this.humidity = humidity;
+        this.pressure = pressure;
+        this.forecastTemperatures = forecastTemperatures;
+        measurementsChanged();
+    }
+
+    public float getTemperature() {
+        return temperature;
+    }
+
+    public float getHumidity() {
+        return humidity;
+    }
+
+    public float getPressure() {
+        return pressure;
+    }
+
+    public List<Float> getForecastTemperatures() {
+        return forecastTemperatures;
+    }
+}
+
+作者：张磊BARON
+链接：http://www.jianshu.com/p/d55ee6e83d66
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+```
+public class CurrentConditionsDisplay implements Observer, DisplayElement {
+
+    private WeatherData weatherData;
+
+    private float temperature;//温度
+    private float humidity;//湿度
+    private float pressure;//气压
+
+    public CurrentConditionsDisplay(WeatherData weatherData) {
+        this.weatherData = weatherData;
+        this.weatherData.registerObserver(this);
+    }
+
+    @Override
+    public void display() {
+        System.out.println("当前温度为：" + this.temperature + "℃");
+        System.out.println("当前湿度为：" + this.humidity);
+        System.out.println("当前气压为：" + this.pressure);
+    }
+
+    @Override
+    public void update() {
+        this.temperature = this.weatherData.getTemperature();
+        this.humidity = this.weatherData.getHumidity();
+        this.pressure = this.weatherData.getPressure();
+        display();
+    }
+}
+
+作者：张磊BARON
+链接：http://www.jianshu.com/p/d55ee6e83d66
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+```
+public class ForecastDisplay implements Observer, DisplayElement {
+
+    private WeatherData weatherData;
+
+    private List<Float> forecastTemperatures;//未来几天的温度
+
+    public ForecastDisplay(WeatherData weatherData) {
+        this.weatherData = weatherData;
+        this.weatherData.registerObserver(this);
+    }
+
+    @Override
+    public void display() {
+        System.out.println("未来几天的气温");
+        int count = forecastTemperatures.size();
+        for (int i = 0; i < count; i++) {
+            System.out.println("第" + i + "天:" + forecastTemperatures.get(i) + "℃");
+        }
+    }
+
+    @Override
+    public void update() {
+        this.forecastTemperatures = this.weatherData.getForecastTemperatures();
+        display();
+    }
+}
+
+作者：张磊BARON
+链接：http://www.jianshu.com/p/d55ee6e83d66
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+到这里，我们整个气象局的WeatherData应用就改造完成了。两个公告牌CurrentConditionsDisplay和ForecastDisplay实现了Observer和DisplayElement接口，在他们的构造方法中会调用WeatherData的registerObserver方法将自己注册成观察者，这样被观察者WeatherData就会持有观察者的应用，并将它们保存到一个集合中。当被观察者\`WeatherData状态发送变化时就会遍历这个集合，循环调用观察者公告牌更新数据的方法。后面如果我们需要增加或者删除公告牌就只需要新增或者删除实现了Observer和DisplayElement接口的公告牌就好了。
+
+  
+
 
