@@ -94,5 +94,5 @@ AsyncTask内部通信依然使用Handler
     }
 ```
 
-
+handleMessage内部有两个分支语句，MESSAGE\_POST\_RESULT，可以看出这个是处理结果的 ， result.mTask.finish\(result.mData\[0\]\)调用了
 
