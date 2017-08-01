@@ -197,5 +197,81 @@ public void run() {
     }
 ```
 
-可以看到有一个Callable，调用了callable 的call函数，这个Callable函数就是AsyncTask构造函数中的mWorker ，call函数就是mWorker 中的call函数，在此调用了doInBackground（）函数， 其它一处是在cancel中掉用的，cancel调用了done，所以就算取消了任务执行也会调用到onPostExecute（）
+可以看到有一个Callable，调用了callable 的call函数，这个Callable函数就是AsyncTask构造函数中的mWorker ，call函数就是mWorker 中的call函数，在此调用了doInBackground（）函数， 其它一处是在cancel中掉用的，cancel调用了done，所以就算取消了任务执行也会调用到onPostExecute（）。
+
+#### 调用FutureTask的地方:
+
+```
+public final AsyncTask<Params, Progress, Result> executeOnExecutor(Executor exec,
+            Params... params) {
+        if (mStatus != Status.PENDING) {
+            switch (mStatus) {
+                case RUNNING:
+                    throw new IllegalStateException("Cannot execute task:"
+                            + " the task is already running.");
+                case FINISHED:
+                    throw new IllegalStateException("Cannot execute task:"
+                            + " the task has already been executed "
+                            + "(a task can be executed only once)");
+            }
+        }
+
+        mStatus = Status.RUNNING;
+
+        onPreExecute();
+
+        mWorker.mParams = params;
+        exec.execute(mFuture);
+
+        return this;
+    }
+
+
+```
+
+在这个地方我们看到了exec.execute（mFuture），这个mFuture就是构造函数中的FutureTask。而executeOnExecutor被  task.executeOnExecutor\(AsyncTask.THREAD\_POOL\_EXECUTOR,value\)与  task.execute（value）调用，而这就是页面上开始调用的地方。到此为止分析了返回结果整个的调用流程，而进度条流程要简单很多就不进行分析了。
+
+### 不指定Excutor时，AsyncTask如何顺序执行
+
+我们在task.execute的内部发现实际调用的是executeOnExecutor\(sDefaultExecutor, params\)，这里面的sDefaultExecutor为SERIAL\_EXECUTOR，而SERIAL\_EXECUTOR为：
+
+```
+private static class SerialExecutor implements Executor {
+        final ArrayDeque<Runnable> mTasks = new ArrayDeque<Runnable>();
+        Runnable mActive;
+
+        public synchronized void execute(final Runnable r) {
+            mTasks.offer(new Runnable() {
+                public void run() {
+                    try {
+                        r.run();
+                    } finally {
+                        scheduleNext();
+                    }
+                }
+            });
+            if (mActive == null) {
+                scheduleNext();
+            }
+        }
+
+        protected synchronized void scheduleNext() {
+            if ((mActive = mTasks.poll()) != null) {
+                THREAD_POOL_EXECUTOR.execute(mActive);
+            }
+        }
+    }
+```
+
+当调用execute的时候，首先将Runnable添加到了一个队列的尾部，第一次执行的时候mActive肯定为null，因此调用scheduleNext，获取到对头的Runnable执行，当执行完毕后再finnally中获取下一个执行对象。这样就能串行进行执行了，因此当前一个任务阻塞后，也会导致后面的所有任务阻塞，因此在3.0后版本执行时指定Executor。
+
+最后我们来整理一下调用流程，execute调用FutureTask中的run函数，在run函数中调用callable的call函数，在call函数中调用postResult函数，在此发送message到handler，在handler处理返回的结果。
+
+
+
+## 常见问题
+
+1）能否在其他线程中调用AsncTask
+
+
 
