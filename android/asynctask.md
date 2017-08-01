@@ -58,7 +58,7 @@ AsyncTask<Integer, Void, Integer> task = new AsyncTask<Integer, Void, Integer>()
 
 ## AsyncTask源码分析（Android4.4.2）
 
-AsyncTask内部通信依然使用Handler
+### AsyncTask内部通信依然使用Handler
 
 ```
   private static class InternalHandler extends Handler {
@@ -94,5 +94,108 @@ AsyncTask内部通信依然使用Handler
     }
 ```
 
-handleMessage内部有两个分支语句，MESSAGE\_POST\_RESULT，可以看出这个是处理结果的 ， result.mTask.finish\(result.mData\[0\]\)调用了
+handleMessage内部有两个分支语句，MESSAGE\_POST\_RESULT，可以看出这个是处理结果的 ， result.mTask.finish\(result.mData\[0\]\)调用了
+
+```
+   private void finish(Result result) {
+        if (isCancelled()) {
+            onCancelled(result);
+        } else {
+            onPostExecute(result);
+        }
+        mStatus = Status.FINISHED;
+    }
+```
+
+MESSAGE\_POST\_PROGRESS这个是处理进度条的，result.mTask.onProgressUpdate\(result.mData\)，这个对应了AsyncTask中的进度函数。
+
+### Message发出
+
+```
+private Result postResult(Result result) {
+        @SuppressWarnings("unchecked")
+        Message message = sHandler.obtainMessage(MESSAGE_POST_RESULT,
+                new AsyncTaskResult<Result>(this, result));
+        message.sendToTarget();
+        return result;
+    }
+```
+
+在此处我们看到发送了消息，而调用这个的地方有两处：
+
+```
+public AsyncTask() {
+        mWorker = new WorkerRunnable<Params, Result>() {
+            public Result call() throws Exception {
+                mTaskInvoked.set(true);
+
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                //noinspection unchecked
+                return postResult(doInBackground(mParams));
+            }
+        };
+
+        mFuture = new FutureTask<Result>(mWorker) {
+            @Override
+            protected void done() {
+                try {
+                    postResultIfNotInvoked(get());
+                } catch (InterruptedException e) {
+                    android.util.Log.w(LOG_TAG, e);
+                } catch (ExecutionException e) {
+                    throw new RuntimeException("An error occured while executing doInBackground()",
+                            e.getCause());
+                } catch (CancellationException e) {
+                    postResultIfNotInvoked(null);
+                }
+            }
+        };
+    }
+
+    private void postResultIfNotInvoked(Result result) {
+        final boolean wasTaskInvoked = mTaskInvoked.get();
+        if (!wasTaskInvoked) {
+            postResult(result);
+        }
+    }
+```
+
+可以发现第一处有一个熟悉的地方，doInBackground（mParams），这个就是我们执行后台程序的地方，另一处在postResultIfNotInvoked中调用。
+
+在FutureTask中的run函数中：
+
+```
+public void run() {
+        if (state != NEW ||!UNSAFE.compareAndSwapObject(this, runnerOffset, null, Thread.currentThread()))
+            return;
+        try {
+            Callable<V> c = callable;//Callable 
+            if (c != null && state == NEW) {
+                V result;
+                boolean ran;
+                try {
+                    result = c.call();
+                    ran = true;
+                } catch (Throwable ex) {
+                    result = null;
+                    ran = false;
+                    setException(ex);
+                }
+                if (ran)
+                    set(result);
+            }
+        } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
+            runner = null;
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
+            int s = state;
+            if (s >= INTERRUPTING)
+                handlePossibleCancellationInterrupt(s);
+        }
+    }
+```
+
+可以看到有一个Callable，调用了callable 的call函数，这个Callable函数就是AsyncTask构造函数中的mWorker ，call函数就是mWorker 中的call函数，在此调用了doInBackground（）函数， 其它一处是在cancel中掉用的，cancel调用了done，所以就算取消了任务执行也会调用到onPostExecute（）
 
