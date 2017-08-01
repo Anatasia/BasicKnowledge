@@ -1,8 +1,10 @@
-    android在新版本中不允许UI线程访问网络；在android中UI线程中不能执行耗时太长的任务，否则会引发ANR。
+```
+android在新版本中不允许UI线程访问网络；在android中UI线程中不能执行耗时太长的任务，否则会引发ANR。
 
 
 
-    不同线程间的通信，可以选择Handler或者AsyncTask解决线程间通信问题。这里主要介绍AsyncTask。
+不同线程间的通信，可以选择Handler或者AsyncTask解决线程间通信问题。这里主要介绍AsyncTask。
+```
 
 AsyncTask是一个抽象类含有三个参数， AsyncTask&lt;Params, Progress, Result&gt;，根据参数的名字可以知道分别为：输入参数，进度，与返回结果，如果你要使用它必须要集成他，或者采用匿名类的方式。
 
@@ -56,7 +58,41 @@ AsyncTask<Integer, Void, Integer> task = new AsyncTask<Integer, Void, Integer>()
 
 ## AsyncTask源码分析（Android4.4.2）
 
+AsyncTask内部通信依然使用Handler
 
+```
+  private static class InternalHandler extends Handler {
+        @SuppressWarnings({"unchecked", "RawUseOfParameterizedType"})
+        @Override
+        public void handleMessage(Message msg) {
+            AsyncTaskResult result = (AsyncTaskResult) msg.obj;
+            switch (msg.what) {
+                case MESSAGE_POST_RESULT:
+                    // There is only one result
+                    result.mTask.finish(result.mData[0]);
+                    break;
+                case MESSAGE_POST_PROGRESS:
+                    result.mTask.onProgressUpdate(result.mData);
+                    break;
+            }
+        }
+    }
+
+    private static abstract class WorkerRunnable<Params, Result> implements Callable<Result> {
+        Params[] mParams;
+    }
+
+    @SuppressWarnings({"RawUseOfParameterizedType"})
+    private static class AsyncTaskResult<Data> {
+        final AsyncTask mTask;
+        final Data[] mData;
+
+        AsyncTaskResult(AsyncTask task, Data... data) {
+            mTask = task;
+            mData = data;
+        }
+    }
+```
 
 
 
