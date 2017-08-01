@@ -282,7 +282,11 @@ ConcreteSubject：具体主题。将有关状态存入具体观察者对象。�
 
 ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新接口，以便使本身的状态与主题状态相协调。
 
-## 2）观察者模式优缺点
+## 2）观察者模式实现
+
+观察者模式又分为两种模式：push和pull。push是指suject在状态变化时将所有的状态信息都发给observer，pull则是suject通知observer更新时，observer获取自己感兴趣的状态。
+
+## 3）观察者模式优缺点
 
 ### a）优点
 
@@ -300,7 +304,7 @@ ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新
 
 3、   观察者模式没有相应的机制让观察者知道所观察的目标对象是怎么发生变化的，而仅仅只是知道观察目标发生了变化。
 
-## 3）适用场景
+## 4）适用场景
 
 1、一个抽象模型有两个方面，其中一个方面依赖于另一个方面。将这些方面封装在独立的对象中使它们可以各自独立地改变和复用。
 
@@ -513,7 +517,4 @@ public class ForecastDisplay implements Observer, DisplayElement {
 ```
 
 到这里，我们整个气象局的WeatherData应用就改造完成了。两个公告牌CurrentConditionsDisplay和ForecastDisplay实现了Observer和DisplayElement接口，在他们的构造方法中会调用WeatherData的registerObserver方法将自己注册成观察者，这样被观察者WeatherData就会持有观察者的应用，并将它们保存到一个集合中。当被观察者\`WeatherData状态发送变化时就会遍历这个集合，循环调用观察者公告牌更新数据的方法。后面如果我们需要增加或者删除公告牌就只需要新增或者删除实现了Observer和DisplayElement接口的公告牌就好了。
-
-  
-
 
