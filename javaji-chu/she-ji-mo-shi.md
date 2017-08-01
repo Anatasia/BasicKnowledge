@@ -218,7 +218,7 @@ Java中一个类并不是单纯依靠其全包类名来标识的，而是全包�
 
 由此看来，Singleton唯有妥善关闭了如上所述的诸多后门才能称得上真正的单例。有两种方式可供参考，第一种方式通过完善现有实现让克隆、序列化、反射和类加载器无从下手，第二种方式则采取枚举类型间接实现单例。
 
-a）Safe Singleton
+### a）Safe Singleton
 
 ```
 public class SafeSingleton implements Serializable, Cloneable {
@@ -247,5 +247,18 @@ public class SafeSingleton implements Serializable, Cloneable {
 }
 ```
 
+在原有Singleton的基础上完善若干方法即可实现一个安全的更为纯正的Singleton。注意到当实例已经存在时试图通过调用私有构造函数会直接报错从而抵御了反射机制的入侵； 让调用clone方法直接报错避免了实例被克隆；覆写readReslove方法直接返回现有的实例本身可以防止反序列化过程中生成新的实例。
 
+### b）Enum Singleton
+
+```
+public enum EnumSingleton{
+    INSTANCE;
+
+    private EnumSingleton(){
+    }
+}
+```
+
+　采用枚举的方式实现Singleton非常简易，而且可直接通过EnumSingleton.INSTANCE获取该实例。Java中所有定义为enum的类内部都继承了Enum类，而Enum具备的特性包括类加载是静态的来保证线程安全，而且其中的clone方法是final的且直接抛出CloneNotSupportedException异常因而不允许拷贝，同时与生俱来的序列化机制也是直接由JVM掌控的并不会创建出新的实例，此外Enum不能被显式实例化反射破坏也不起作用。当然它也不是没有缺点，比如由于已经隐式继承Enum所以无法再继承其他类了（Java的单继承模式限制）。
 
