@@ -270,7 +270,7 @@ public enum EnumSingleton{
 
 ## 1\)UML类图
 
-![](/assets/Observer.png)
+![](/assets/observer.png)
 
 分析：
 
@@ -322,8 +322,5 @@ ConcreteObserver:具体观察者。实现抽象观察者角色所要求的更新
 
 6、使用观察者模式，可以从被观察者处推或者拉数据。
 
-  
-
-
-
+4）观察者模式的应用
 
